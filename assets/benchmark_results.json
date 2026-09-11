@@ -1,0 +1,92 @@
+{
+  "validated_envelope_fps": [
+    30.0,
+    60.0,
+    120.0
+  ],
+  "table": [
+    {
+      "fps": 30.0,
+      "noise_px": 1.0,
+      "thigh_rmse_raw_deg": 0.7037767331301509,
+      "thigh_rmse_corrected_deg": 0.4980114233906015,
+      "shank_rmse_raw_deg": 1.1088692126772683,
+      "shank_rmse_corrected_deg": 1.3217093757900915
+    },
+    {
+      "fps": 30.0,
+      "noise_px": 3.0,
+      "thigh_rmse_raw_deg": 1.8212113868409154,
+      "thigh_rmse_corrected_deg": 0.9938235702476729,
+      "shank_rmse_raw_deg": 2.4718715291203823,
+      "shank_rmse_corrected_deg": 1.6698110963279358
+    },
+    {
+      "fps": 30.0,
+      "noise_px": 6.0,
+      "thigh_rmse_raw_deg": 3.5934918355648513,
+      "thigh_rmse_corrected_deg": 1.925655713630542,
+      "shank_rmse_raw_deg": 4.7517835592387945,
+      "shank_rmse_corrected_deg": 2.529740468061663
+    },
+    {
+      "fps": 60.0,
+      "noise_px": 1.0,
+      "thigh_rmse_raw_deg": 0.6793326520651571,
+      "thigh_rmse_corrected_deg": 0.41373132742850793,
+      "shank_rmse_raw_deg": 0.8049138456530498,
+      "shank_rmse_corrected_deg": 1.005355015372542
+    },
+    {
+      "fps": 60.0,
+      "noise_px": 3.0,
+      "thigh_rmse_raw_deg": 1.8279920886687062,
+      "thigh_rmse_corrected_deg": 0.9657724968031873,
+      "shank_rmse_raw_deg": 2.3730191839182844,
+      "shank_rmse_corrected_deg": 1.2248582495184361
+    },
+    {
+      "fps": 60.0,
+      "noise_px": 6.0,
+      "thigh_rmse_raw_deg": 3.624278086712044,
+      "thigh_rmse_corrected_deg": 2.1746759774430475,
+      "shank_rmse_raw_deg": 4.763936857025581,
+      "shank_rmse_corrected_deg": 2.547779822780388
+    },
+    {
+      "fps": 120.0,
+      "noise_px": 1.0,
+      "thigh_rmse_raw_deg": 0.6709211031450771,
+      "thigh_rmse_corrected_deg": 0.3732257327325883,
+      "shank_rmse_raw_deg": 0.7835453927334634,
+      "shank_rmse_corrected_deg": 0.8862205807377309
+    },
+    {
+      "fps": 120.0,
+      "noise_px": 3.0,
+      "thigh_rmse_raw_deg": 1.8180954369603077,
+      "thigh_rmse_corrected_deg": 0.9848034742694735,
+      "shank_rmse_raw_deg": 2.3394452644764216,
+      "shank_rmse_corrected_deg": 1.2194521867155461
+    },
+    {
+      "fps": 120.0,
+      "noise_px": 6.0,
+      "thigh_rmse_raw_deg": 3.6105812441931597,
+      "thigh_rmse_corrected_deg": 2.0679368574680894,
+      "shank_rmse_raw_deg": 4.686186727644279,
+      "shank_rmse_corrected_deg": 2.670179761653689
+    }
+  ],
+  "certificate_events_total": 648,
+  "certificate_events_held": 645,
+  "certificate_hold_rate": 0.9953703703703703,
+  "certificate_avg_tightness_ratio": 67.4341518612524,
+  "detection_recall_mean": 1.0,
+  "detection_precision_mean": 1.0,
+  "stress_test_240fps": {
+    "hold_rate": 0.7268518518518519,
+    "recall_mean": 1.0,
+    "precision_mean": 1.0
+  }
+}

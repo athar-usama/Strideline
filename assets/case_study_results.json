@@ -1,0 +1,31 @@
+{
+  "cadence_spm": 330.5084745762712,
+  "active_duration_s": 2.36,
+  "step_time_asymmetry_pct": 51.61823743603538,
+  "left": {
+    "n_contacts": 7,
+    "knee_angle_at_contact_deg_mean": 38.759100358740206,
+    "knee_angle_at_contact_deg_std": 17.47646556977165,
+    "stride_time_cv_pct": 45.54846189365673,
+    "knee_angle_cv_pct": 45.089967021978865,
+    "form_consistency_index": 52.455321085474125,
+    "hip_vertical_oscillation_ratio": 0.29201688613921606,
+    "kinematic_consistency_violation_raw_pct": 12.600592956183275,
+    "kinematic_consistency_violation_corrected_pct": 3.528264889355392e-14,
+    "L_thigh_px": 188.91670270517108,
+    "L_shank_px": 174.26985085042415
+  },
+  "right": {
+    "n_contacts": 6,
+    "knee_angle_at_contact_deg_mean": 44.25266234835634,
+    "knee_angle_at_contact_deg_std": 14.167952786927426,
+    "stride_time_cv_pct": 31.33151702084415,
+    "knee_angle_cv_pct": 32.01604612033848,
+    "form_consistency_index": 61.21915630511683,
+    "hip_vertical_oscillation_ratio": 0.24537741217148923,
+    "kinematic_consistency_violation_raw_pct": 10.032288182248012,
+    "kinematic_consistency_violation_corrected_pct": 4.19208430350514e-14,
+    "L_thigh_px": 196.89849923269495,
+    "L_shank_px": 199.71336412118168
+  }
+}
