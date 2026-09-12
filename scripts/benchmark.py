@@ -112,6 +112,13 @@ def main():
 
     viz.plot_bound_validation(all_rows, FIG_DIR / "bound_validation.png")
 
+    gallery_seq = simulate.generate_sequence(duration_s=8.0, fps=60.0, pixel_noise_std=7.0,
+                                              dropout_prob=0.05, seed=7)
+    gallery_result = constrained_smooth(gallery_seq.hip_raw, gallery_seq.knee_raw["L"],
+                                         gallery_seq.ankle_raw["L"], dt=gallery_seq.dt)
+    viz.plot_synthetic_correction_gallery(gallery_seq, gallery_result, "L", gallery_seq.dt,
+                                           FIG_DIR / "synthetic_correction_gallery.png")
+
     print(json.dumps({k: v for k, v in summary.items() if k != "table"}, indent=2))
     for row in table:
         print(row)

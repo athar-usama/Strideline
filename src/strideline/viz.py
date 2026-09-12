@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 STRIDE_BLUE = "#2f6f9f"
 STRIDE_RED = "#c1440e"
+STRIDE_GREEN = "#2c8c4c"
 STRIDE_INK = "#1b1b1b"
 STRIDE_GRID = "#d8d8d8"
 
@@ -153,7 +154,7 @@ def plot_bound_validation(rows, out_path, title="Certified bound vs. empirical t
     plt.close(fig)
 
 
-def render_overlay_gif(video_path, tracks, results, out_path, fps_out=12.0, resize_width=480,
+def render_overlay_gif(video_path, tracks, results, out_path, fps_out=15.0, resize_width=640,
                         pad_frames=6):
     """Render raw (red) vs. corrected (blue) skeleton overlays on the
     original video, exported as a compact GIF for the README hero image.
@@ -225,20 +226,163 @@ def render_overlay_gif(video_path, tracks, results, out_path, fps_out=12.0, resi
                 cv2.circle(canvas, pt(p), 5, (255, 255, 255), -1, cv2.LINE_AA)
                 cv2.circle(canvas, pt(p), 5, (220, 140, 30), 2, cv2.LINE_AA)
 
-        font_scale = 0.5
-        cv2.putText(canvas, "red = raw pose   blue = corrected", (14, 26),
-                    cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 3, cv2.LINE_AA)
-        cv2.putText(canvas, "red = raw pose   blue = corrected", (14, 26),
-                    cv2.FONT_HERSHEY_SIMPLEX, font_scale, (20, 20, 20), 1, cv2.LINE_AA)
         frames_out.append(cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB))
         i += 1
 
     cap.release()
 
-    images = [Image.fromarray(f).quantize(colors=128, method=Image.MEDIANCUT) for f in frames_out]
+    # No burned-in caption text: GIF palette quantization makes small anti-aliased
+    # text look blurry/noisy. The red/blue legend lives in the README caption
+    # instead, where it renders crisply at any zoom level.
+    images = [Image.fromarray(f).quantize(colors=192, method=Image.MEDIANCUT) for f in frames_out]
     duration_ms = round(1000 / fps_out)
     images[0].save(out_path, save_all=True, append_images=images[1:], duration=duration_ms,
                    loop=0, optimize=True)
+
+
+def plot_synthetic_correction_gallery(seq, result, side, dt, out_path, n_panels=6):
+    """One full gait cycle, small multiples: the true stick figure (green,
+    exact simulator ground truth) against the actual raw noisy keypoints
+    (red, literally the simulated detector's output) and the corrected
+    reconstruction (blue), all recentred on the hip. Unlike the real-video
+    case study, this has ground truth, so it is the most direct visual
+    evidence the correction is recovering the right skeleton rather than
+    merely a smoother-looking wrong one.
+    """
+    from . import kinematics as kin
+
+    side_name = {"L": "left", "R": "right"}.get(side, side)
+    contacts = seq.contact_times_true[side]
+    t0, t1 = contacts[1], contacts[2]  # an interior cycle, away from sequence edges
+    idxs = [round((t0 + frac * (t1 - t0)) / dt) for frac in np.linspace(0, 1, n_panels, endpoint=False)]
+
+    true_thigh = np.unwrap(seq.theta_thigh_true[side])
+    true_shank = np.unwrap(seq.theta_shank_true[side])
+    L_total = seq.L_thigh_true + seq.L_shank_true
+
+    fig, axes = plt.subplots(1, n_panels, figsize=(1.85 * n_panels, 2.7), sharex=True, sharey=True)
+
+    def leg(ax, knee, ankle, color, lw, label, z, ls="-"):
+        ax.plot([0, knee[0], ankle[0]], [0, -knee[1], -ankle[1]], color=color, lw=lw, ls=ls,
+                marker="o", ms=4.5, label=label, zorder=z, solid_capstyle="round",
+                dash_capstyle="round")
+
+    for panel, idx in enumerate(idxs):
+        ax = axes[panel]
+        tk = seq.L_thigh_true * kin.unit(true_thigh[idx])
+        ta = tk + seq.L_shank_true * kin.unit(true_shank[idx])
+        leg(ax, tk, ta, STRIDE_GREEN, 3.4, "true", 1)
+
+        hip_r, knee_r, ankle_r = seq.hip_raw[idx], seq.knee_raw[side][idx], seq.ankle_raw[side][idx]
+        if np.all(np.isfinite(knee_r)) and np.all(np.isfinite(ankle_r)):
+            leg(ax, knee_r - hip_r, ankle_r - hip_r, STRIDE_RED, 1.6, "raw", 2)
+
+        ck = result.L_thigh * kin.unit(result.theta_thigh[idx])
+        ca = ck + result.L_shank * kin.unit(result.theta_shank[idx])
+        leg(ax, ck, ca, STRIDE_BLUE, 2.0, "corrected", 3, ls=(0, (4, 2)))
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_aspect("equal")
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+    axes[0].set_xlim(-0.75 * L_total, 0.75 * L_total)
+    axes[0].set_ylim(-1.08 * L_total, 0.08 * L_total)
+    axes[0].legend(loc="upper left", fontsize=8.5, frameon=False, handlelength=2.0)
+    fig.suptitle(f"One gait cycle, ground truth vs. raw vs. corrected ({side_name} leg)", fontsize=13,
+                 color=STRIDE_INK, y=0.98)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=170, bbox_inches="tight")
+    plt.close(fig)
+
+
+def render_contact_filmstrip(video_path, tracks, result, side, events, dt, out_path,
+                              n_events=4, crop_w=260, crop_h=340):
+    """A crisp, static filmstrip of real video frames at detected foot-strike
+    instants, with the corrected skeleton overlaid and the certified timing
+    window printed under each panel. Static PNG, not a GIF, so the text
+    renders sharp at any zoom level.
+    """
+    import cv2
+    from PIL import Image, ImageDraw, ImageFont
+
+    from . import kinematics as kin
+
+    if not events:
+        return
+
+    chosen_idx = np.linspace(0, len(events) - 1, min(n_events, len(events))).round().astype(int)
+    chosen = [events[i] for i in sorted(set(chosen_idx.tolist()))]
+
+    knee_hat, ankle_hat = kin.forward_kinematics(result.hip, result.theta_thigh, result.theta_shank,
+                                                  result.L_thigh, result.L_shank)
+
+    cap = cv2.VideoCapture(str(video_path))
+    try:
+        font = ImageFont.truetype("arial.ttf", 17)
+        font_small = ImageFont.truetype("arial.ttf", 14)
+    except OSError:
+        font = ImageFont.load_default()
+        font_small = font
+
+    label_h = 46
+    panels = []
+    for e in chosen:
+        frame_idx = round(e.t_cross / dt)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+        ret, frame = cap.read()
+        if not ret:
+            continue
+
+        cx, cy = ankle_hat[frame_idx]
+        cy -= crop_h * 0.32
+        x0, y0 = int(cx - crop_w / 2), int(cy - crop_h / 2)
+        fh, fw = frame.shape[:2]
+        pad_l, pad_t = max(0, -x0), max(0, -y0)
+        pad_r, pad_b = max(0, x0 + crop_w - fw), max(0, y0 + crop_h - fh)
+        padded = cv2.copyMakeBorder(frame, pad_t, pad_b, pad_l, pad_r, cv2.BORDER_CONSTANT, value=(20, 20, 20))
+        x0p, y0p = x0 + pad_l, y0 + pad_t
+        crop = padded[y0p:y0p + crop_h, x0p:x0p + crop_w].copy()
+        offset = np.array([x0, y0])
+
+        def pt(p, offset=offset):
+            return (int(p[0] - offset[0]), int(p[1] - offset[1]))
+
+        hip_c, knee_c, ankle_c = result.hip[frame_idx], knee_hat[frame_idx], ankle_hat[frame_idx]
+        knee_r, ankle_r = tracks.knee[side][frame_idx], tracks.ankle[side][frame_idx]
+        hip_r = tracks.hip[side][frame_idx]
+        if np.all(np.isfinite(knee_r)) and np.all(np.isfinite(hip_r)):
+            cv2.line(crop, pt(hip_r), pt(knee_r), (30, 30, 220), 2, cv2.LINE_AA)
+        if np.all(np.isfinite(ankle_r)) and np.all(np.isfinite(knee_r)):
+            cv2.line(crop, pt(knee_r), pt(ankle_r), (30, 30, 220), 2, cv2.LINE_AA)
+        cv2.line(crop, pt(hip_c), pt(knee_c), (220, 140, 30), 3, cv2.LINE_AA)
+        cv2.line(crop, pt(knee_c), pt(ankle_c), (220, 140, 30), 3, cv2.LINE_AA)
+        for p in (hip_c, knee_c, ankle_c):
+            cv2.circle(crop, pt(p), 5, (255, 255, 255), -1, cv2.LINE_AA)
+            cv2.circle(crop, pt(p), 5, (220, 140, 30), 2, cv2.LINE_AA)
+
+        rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+        panel = Image.new("RGB", (crop_w, crop_h + label_h), (250, 250, 250))
+        panel.paste(Image.fromarray(rgb), (0, 0))
+        draw = ImageDraw.Draw(panel)
+        draw.text((10, crop_h + 6), f"t = {e.t_cross:.2f}s", fill=(20, 20, 20), font=font)
+        draw.text((10, crop_h + 26), f"certified window: +/-{e.bound_seconds * 1000:.0f} ms",
+                   fill=(70, 70, 70), font=font_small)
+        panels.append(panel)
+
+    cap.release()
+    if not panels:
+        return
+
+    gap = 14
+    total_w = sum(p.width for p in panels) + gap * (len(panels) - 1)
+    strip = Image.new("RGB", (total_w, panels[0].height), (255, 255, 255))
+    x = 0
+    for p in panels:
+        strip.paste(p, (x, 0))
+        x += p.width + gap
+    strip.save(out_path)
 
 
 def plot_energy_trace(energy_trace, out_path, title="Alternating-minimization energy"):

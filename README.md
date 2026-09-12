@@ -70,6 +70,17 @@ monotonically non-increasing, checked directly (not just argued) in
 
 <p align="center"><img src="assets/figures/energy_trace_left.png" width="440" alt="Energy trace decreasing monotonically across outer iterations, real clip"></p>
 
+Because the synthetic simulator carries exact ground truth, the correction can be
+checked against the true skeleton directly, not just against a smoother-looking
+guess. One gait cycle, small multiples, the same six instants for all three:
+
+<p align="center"><img src="assets/figures/synthetic_correction_gallery.png" width="100%" alt="Six instants across one gait cycle: true skeleton in green, actual raw noisy keypoints in red, corrected reconstruction in blue"></p>
+
+The blue (corrected) line sits almost exactly on top of the green (true) line in
+every panel; the red (raw) line is the actual simulated detector output, wandering
+off it by varying amounts frame to frame - visible proof the correction is
+converging to the right answer, not merely a tidier wrong one.
+
 ## The contact-time certificate
 
 Ground contact is the zero-crossing of the ankle's vertical velocity. Linear
@@ -147,11 +158,41 @@ long enough for the cadence and variability numbers to be precision
 measurements. Treat this section as "does the machinery work on a real, messy
 video," and the synthetic table above as the actual accuracy claim.
 
-<p align="center"><img src="assets/figures/phase_portrait_left.png" width="380" alt="Knee angle vs angular velocity phase portrait, real clip"> <img src="assets/figures/symmetry_radar.png" width="380" alt="Left vs right symmetry radar, real clip"></p>
+**The contact certificate, on real frames.** Four detected foot strikes, cropped
+straight out of the source video, with the corrected skeleton overlaid (red is
+the raw pose model's own output at that instant) and the certified timing
+window printed underneath - the same certificate as the graph above, but
+anchored to what the camera actually saw.
 
-<p align="center"><img src="assets/figures/constraint_violation_left.png" width="760" alt="Where the raw pose broke limb-length constancy over time, real clip"></p>
+<p align="center"><img src="assets/figures/contact_filmstrip_left.png" width="100%" alt="Four real video frames at detected foot-strike instants, skeleton overlaid, certified timing window printed under each"></p>
+
+**Knee phase portraits, both legs.** The same limit-cycle view as the
+constraint section above, computed independently per leg - the two loops are
+visibly different shapes, which is the phase portrait's way of showing the
+asymmetry the table below quantifies.
+
+<p align="center"><img src="assets/figures/phase_portrait_left.png" height="330" alt="Knee phase portrait, left leg, real clip"> <img src="assets/figures/phase_portrait_right.png" height="330" alt="Knee phase portrait, right leg, real clip"></p>
+
+**Ankle paths, both legs.** Raw keypoints (thin, pale) against the corrected
+trajectory (thick, blue) - the correction visibly rides through the raw jitter
+rather than deviating from it.
+
+<p align="center"><img src="assets/figures/ankle_path_left.png" height="300" alt="Ankle path, left leg, real clip"> <img src="assets/figures/ankle_path_right.png" height="300" alt="Ankle path, right leg, real clip"></p>
+
+**Where the raw pose broke limb-length constancy, both legs.**
+
+<p align="center"><img src="assets/figures/constraint_violation_left.png" width="760" alt="Where the raw pose broke limb-length constancy over time, left leg, real clip"></p>
+<p align="center"><img src="assets/figures/constraint_violation_right.png" width="760" alt="Where the raw pose broke limb-length constancy over time, right leg, real clip"></p>
+
+**The contact-time certificate over the full clip, left leg** (the filmstrip
+above zooms in on four of these events):
 
 <p align="center"><img src="assets/figures/certificate_timeline_left.png" width="760" alt="Detected contact events with certified timing windows, real clip"></p>
+
+**Left / right symmetry**, the same three consistency metrics as the case-study
+table below, as a shape rather than a column of numbers:
+
+<p align="center"><img src="assets/figures/symmetry_radar.png" width="420" alt="Left vs right symmetry radar, real clip"></p>
 
 <div align="center">
 
@@ -207,16 +248,22 @@ the 240 fps stress-test numbers cited above.
 
 ## Layout
 
-| path | contents |
-|---|---|
-| `src/strideline/rts.py` | generic linear Kalman filter / RTS smoother |
-| `src/strideline/kinematics.py` | keypoints <-> joint angles, forward kinematics |
-| `src/strideline/smoother.py` | the constrained kinematic smoother |
-| `src/strideline/events.py` | contact detection and the certified bound |
-| `src/strideline/metrics.py` | cadence, asymmetry, variability, Form Consistency Index |
-| `src/strideline/simulate.py` | the synthetic ground-truth gait generator |
-| `src/strideline/pose.py` | local YOLO11-pose keypoint extraction |
-| `src/strideline/viz.py` | every figure in this README |
+<table width="100%">
+<colgroup><col width="32%"><col width="68%"></colgroup>
+<tr><th align="left">path</th><th align="left">contents</th></tr>
+<tr><td><code>src/strideline/rts.py</code></td><td>generic linear Kalman filter / RTS smoother</td></tr>
+<tr><td><code>src/strideline/kinematics.py</code></td><td>keypoints &lt;-&gt; joint angles, forward kinematics</td></tr>
+<tr><td><code>src/strideline/smoother.py</code></td><td>the constrained kinematic smoother (pillar 1)</td></tr>
+<tr><td><code>src/strideline/events.py</code></td><td>contact detection and the certified bound (pillar 2)</td></tr>
+<tr><td><code>src/strideline/metrics.py</code></td><td>cadence, asymmetry, variability, Form Consistency Index</td></tr>
+<tr><td><code>src/strideline/simulate.py</code></td><td>the synthetic ground-truth gait generator</td></tr>
+<tr><td><code>src/strideline/pose.py</code></td><td>local YOLO11-pose keypoint extraction</td></tr>
+<tr><td><code>src/strideline/viz.py</code></td><td>every figure in this README</td></tr>
+<tr><td><code>scripts/benchmark.py</code></td><td>the synthetic sweep: table, bound-validation plot, correction gallery</td></tr>
+<tr><td><code>scripts/run.py</code></td><td>the real-clip case study: metrics, filmstrip, every per-leg figure</td></tr>
+<tr><td><code>scripts/calibrate.py</code></td><td>reproduces <code>CALIBRATED_SAFETY_FACTOR</code> and the 240 fps stress test</td></tr>
+<tr><td><code>tests/</code></td><td>18 tests: smoother convergence, certified-bound validation, kinematics, metrics</td></tr>
+</table>
 
 ## License
 
