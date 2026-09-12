@@ -17,14 +17,10 @@ that come with an actual error bound, not just a number.
 
 <p align="center"><img src="assets/figures/overlay_demo.gif" width="640" alt="Raw pose overlay in red, Strideline-corrected skeleton in blue, on the same running clip"></p>
 
-<div align="center">
-
-| | |
-|---|---|
-| red skeleton | raw output of a COCO-17 pose model, frame by frame |
-| blue skeleton | Strideline's corrected trajectory: same video, same model, one more layer |
-
-</div>
+<table align="center">
+<tr><td>red skeleton</td><td>raw output of a COCO-17 pose model, frame by frame</td></tr>
+<tr><td>blue skeleton</td><td>Strideline's corrected trajectory: same video, same model, one more layer</td></tr>
+</table>
 
 ## What Strideline measures
 
@@ -128,7 +124,7 @@ benchmark code never sees, averaged over 6 random seeds per cell.
 <div align="center">
 
 | fps | noise (px) | thigh RMSE raw (deg) | thigh RMSE corrected (deg) | shank RMSE raw (deg) | shank RMSE corrected (deg) |
-|---|---|---|---|---|---|
+|:---:|:---:|:---:|:---:|:---:|:---:|
 | 30 | 1 | 0.70 | **0.50** | 1.11 | 1.32 |
 | 30 | 3 | 1.82 | **0.99** | 2.47 | **1.67** |
 | 30 | 6 | 3.59 | **1.93** | 4.75 | **2.53** |
