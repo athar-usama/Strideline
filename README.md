@@ -22,6 +22,12 @@ that come with an actual error bound, not just a number.
 <tr><td>blue skeleton</td><td>Strideline's corrected trajectory: same video, same model, one more layer</td></tr>
 </table>
 
+<div align="center">
+
+**[Watch the full 45-second demo reel](assets/demo_reel.mp4)** - every figure in this README, compiled into one clip.
+
+</div>
+
 ## What Strideline measures
 
 | metric | what it is | why it's here |
@@ -236,6 +242,7 @@ pip install -e ".[dev]"
 pytest                          # 18 tests, all synthetic, no download needed
 python scripts/benchmark.py     # regenerates the synthetic table and figure above
 python scripts/run.py assets/clips/running.mp4   # regenerates the case study
+python scripts/make_demo_reel.py   # recompiles assets/demo_reel.mp4 from the figures above
 ```
 
 `scripts/calibrate.py` reproduces `CALIBRATED_SAFETY_FACTOR` from scratch on a
@@ -258,6 +265,7 @@ the 240 fps stress-test numbers cited above.
 <tr><td><code>scripts/benchmark.py</code></td><td>the synthetic sweep: table, bound-validation plot, correction gallery</td></tr>
 <tr><td><code>scripts/run.py</code></td><td>the real-clip case study: metrics, filmstrip, every per-leg figure</td></tr>
 <tr><td><code>scripts/calibrate.py</code></td><td>reproduces <code>CALIBRATED_SAFETY_FACTOR</code> and the 240 fps stress test</td></tr>
+<tr><td><code>scripts/make_demo_reel.py</code></td><td>compiles the figures above into <code>assets/demo_reel.mp4</code></td></tr>
 <tr><td><code>tests/</code></td><td>18 tests: smoother convergence, certified-bound validation, kinematics, metrics</td></tr>
 </table>
 
