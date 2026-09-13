@@ -3,3 +3,15 @@ running.mp4
 Source: Pexels (https://www.pexels.com/video/side-view-of-a-man-running-at-a-track-8533913/)
 License: Pexels License (https://www.pexels.com/license/) - free to use, no attribution required.
 Original resolution: 2560x1440, 25 fps.
+
+clip_soccer.mp4
+
+Source: Pexels (https://www.pexels.com/video/a-man-running-in-the-soccer-field-7187058/)
+License: Pexels License (https://www.pexels.com/license/) - free to use, no attribution required.
+Original resolution: 1920x1080, 24 fps.
+
+clip_graffiti.mp4
+
+Source: Pexels (https://www.pexels.com/video/a-runner-training-in-the-street-13413767/)
+License: Pexels License (https://www.pexels.com/license/) - free to use, no attribution required.
+Original resolution: 1920x1080, 30 fps.

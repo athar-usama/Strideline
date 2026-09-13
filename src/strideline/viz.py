@@ -154,19 +154,15 @@ def plot_bound_validation(rows, out_path, title="Certified bound vs. empirical t
     plt.close(fig)
 
 
-def render_overlay_gif(video_path, tracks, results, out_path, fps_out=15.0, resize_width=640,
-                        pad_frames=6):
-    """Render raw (red) vs. corrected (blue) skeleton overlays on the
-    original video, exported as a compact GIF for the README hero image.
+def overlay_frames(video_path, tracks, results, fps_out, resize_width, pad_frames):
+    """Shared frame generator for the raw (red) vs. corrected (blue) skeleton
+    overlay: crops to the frame range where a runner is actually visible
+    (plus a small pad), subsamples to fps_out / resize_width, and draws both
+    skeletons on every kept frame. Returns a list of RGB frame arrays.
 
     tracks: pose.RawTracks. results: {"left": SmoothResult, "right": SmoothResult}.
-    Automatically crops to the frame range where a runner is actually
-    visible (plus a small pad), and subsamples to fps_out / resize_width,
-    since a full-resolution, full-length GIF is tens of megabytes - far
-    too large for a README asset.
     """
     import cv2
-    from PIL import Image
 
     from . import kinematics as kin
 
@@ -230,6 +226,18 @@ def render_overlay_gif(video_path, tracks, results, out_path, fps_out=15.0, resi
         i += 1
 
     cap.release()
+    return frames_out
+
+
+def render_overlay_gif(video_path, tracks, results, out_path, fps_out=15.0, resize_width=640,
+                        pad_frames=6):
+    """Render the raw/corrected skeleton overlay as a compact GIF for README
+    embedding. A full-resolution, full-length GIF is tens of megabytes - far
+    too large for a README asset, hence the aggressive fps/width/palette cuts.
+    """
+    from PIL import Image
+
+    frames_out = overlay_frames(video_path, tracks, results, fps_out, resize_width, pad_frames)
 
     # No burned-in caption text: GIF palette quantization makes small anti-aliased
     # text look blurry/noisy. The red/blue legend lives in the README caption
@@ -238,6 +246,24 @@ def render_overlay_gif(video_path, tracks, results, out_path, fps_out=15.0, resi
     duration_ms = round(1000 / fps_out)
     images[0].save(out_path, save_all=True, append_images=images[1:], duration=duration_ms,
                    loop=0, optimize=True)
+
+
+def render_overlay_video(video_path, tracks, results, out_path, fps_out=24.0, resize_width=960,
+                          pad_frames=6):
+    """Render the raw/corrected skeleton overlay as a full-color MP4 (no GIF
+    palette quantization), for use as a segment in a compiled action reel.
+    Returns the frame list too, so a caller can reuse it (e.g. to grab a
+    representative still) without re-decoding the source video.
+    """
+    import imageio.v2 as imageio
+
+    frames_out = overlay_frames(video_path, tracks, results, fps_out, resize_width, pad_frames)
+    writer = imageio.get_writer(str(out_path), fps=fps_out, codec="libx264", quality=8,
+                                 macro_block_size=None, ffmpeg_params=["-pix_fmt", "yuv420p"])
+    for frame in frames_out:
+        writer.append_data(frame)
+    writer.close()
+    return frames_out
 
 
 def plot_synthetic_correction_gallery(seq, result, side, dt, out_path, n_panels=6):

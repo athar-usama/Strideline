@@ -22,9 +22,17 @@ that come with an actual error bound, not just a number.
 <tr><td>blue skeleton</td><td>Strideline's corrected trajectory: same video, same model, one more layer</td></tr>
 </table>
 
+## The same pipeline, three different clips
+
+No parameters retuned between clips: the same pose model, the same constrained
+smoother, the same certificate, pointed at a track sprinter, a soccer-field
+sprint start, and a jogger passing a graffiti wall.
+
+<p align="center"><img src="assets/figures/overlay_soccer.gif" width="400" alt="Raw vs corrected skeleton overlay, soccer field sprint clip"> <img src="assets/figures/overlay_graffiti.gif" width="400" alt="Raw vs corrected skeleton overlay, city street clip"></p>
+
 <div align="center">
 
-**[Watch the full 45-second demo reel](assets/demo_reel.mp4)** - every figure in this README, compiled into one clip.
+**[Watch all three clips compiled into one video](assets/action_reel.mp4)** (30s, real footage throughout, no slides)
 
 </div>
 
@@ -242,7 +250,7 @@ pip install -e ".[dev]"
 pytest                          # 18 tests, all synthetic, no download needed
 python scripts/benchmark.py     # regenerates the synthetic table and figure above
 python scripts/run.py assets/clips/running.mp4   # regenerates the case study
-python scripts/make_demo_reel.py   # recompiles assets/demo_reel.mp4 from the figures above
+python scripts/build_action_reel.py   # reruns the pipeline on every clip, rebuilds the action reel
 ```
 
 `scripts/calibrate.py` reproduces `CALIBRATED_SAFETY_FACTOR` from scratch on a
@@ -265,7 +273,7 @@ the 240 fps stress-test numbers cited above.
 <tr><td><code>scripts/benchmark.py</code></td><td>the synthetic sweep: table, bound-validation plot, correction gallery</td></tr>
 <tr><td><code>scripts/run.py</code></td><td>the real-clip case study: metrics, filmstrip, every per-leg figure</td></tr>
 <tr><td><code>scripts/calibrate.py</code></td><td>reproduces <code>CALIBRATED_SAFETY_FACTOR</code> and the 240 fps stress test</td></tr>
-<tr><td><code>scripts/make_demo_reel.py</code></td><td>compiles the figures above into <code>assets/demo_reel.mp4</code></td></tr>
+<tr><td><code>scripts/build_action_reel.py</code></td><td>runs the pipeline on every clip in <code>assets/clips/</code>, compiles <code>assets/action_reel.mp4</code></td></tr>
 <tr><td><code>tests/</code></td><td>18 tests: smoother convergence, certified-bound validation, kinematics, metrics</td></tr>
 </table>
 
