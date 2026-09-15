@@ -43,13 +43,24 @@ def extract_tracks(video_path, model_name="yolo11n-pose.pt", conf=0.3, device=No
 
     results = model.predict(source=str(video_path), stream=True, conf=conf, verbose=False, device=device)
     n_frames = 0
+    prev_center = None
     for r in results:
         n_frames += 1
         frame_kp = {k: {"left": (np.nan, np.nan), "right": (np.nan, np.nan)} for k in ("hip", "knee", "ankle")}
 
         if r.keypoints is not None and len(r.keypoints.xy) > 0:
             if r.boxes is not None and len(r.boxes.conf) > 0:
-                best = int(np.argmax(r.boxes.conf.cpu().numpy()))
+                centers = r.boxes.xywh.cpu().numpy()[:, :2]
+                if prev_center is None:
+                    best = int(np.argmax(r.boxes.conf.cpu().numpy()))
+                else:
+                    # Track the same person frame to frame by proximity to their
+                    # last known position, not by raw detection confidence alone -
+                    # a second person in frame can otherwise win on confidence for
+                    # a few frames and make the tracked skeleton jump between
+                    # two different people.
+                    best = int(np.argmin(np.linalg.norm(centers - prev_center, axis=1)))
+                prev_center = centers[best]
             else:
                 best = 0
             kp = r.keypoints.xy[best].cpu().numpy()

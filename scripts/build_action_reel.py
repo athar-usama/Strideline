@@ -35,8 +35,9 @@ FADE_S = 0.25
 # (clip path, on-screen label, also emit a compact README GIF under this name)
 CLIPS = [
     ("running.mp4", "Outdoor athletics track", None),
-    ("clip_soccer.mp4", "Soccer field sprint", "overlay_soccer.gif"),
-    ("clip_graffiti.mp4", "City street", "overlay_graffiti.gif"),
+    ("clip_track2.mp4", "Same track, different runner", "overlay_track2.gif"),
+    ("clip_field.mp4", "Athletics field, wide shot", "overlay_field.gif"),
+    ("clip_track3.mp4", "Same track, knee-level angle", "overlay_track3.gif"),
 ]
 
 
@@ -72,7 +73,7 @@ def _title_card(seconds=3.2):
     w = draw.textlength(title, font=title_font)
     draw.text(((CANVAS_W - w) / 2, 280), title, font=title_font, fill=INK)
 
-    hook = "the same pipeline, run end to end on three different real clips"
+    hook = "the same pipeline, run end to end on four different real clips"
     w = draw.textlength(hook, font=hook_font)
     draw.text(((CANVAS_W - w) / 2, 380), hook, font=hook_font, fill=ACCENT)
 
@@ -90,7 +91,7 @@ def _outro_card(seconds=3.6):
     w = draw.textlength(head, font=head_font)
     draw.text(((CANVAS_W - w) / 2, 280), head, font=head_font, fill=INK)
 
-    sub = "same model, same smoother, same certificate - on three different videos"
+    sub = "same model, same smoother, same certificate - on four different videos"
     w = draw.textlength(sub, font=sub_font)
     draw.text(((CANVAS_W - w) / 2, 340), sub, font=sub_font, fill=ACCENT)
 

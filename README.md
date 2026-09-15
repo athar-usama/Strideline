@@ -22,17 +22,16 @@ that come with an actual error bound, not just a number.
 <tr><td>blue skeleton</td><td>Strideline's corrected trajectory: same video, same model, one more layer</td></tr>
 </table>
 
-## The same pipeline, three different clips
+## The same pipeline, four different clips
 
 No parameters retuned between clips: the same pose model, the same constrained
-smoother, the same certificate, pointed at a track sprinter, a soccer-field
-sprint start, and a jogger passing a graffiti wall.
+smoother, the same certificate, pointed at four different runners and cameras.
 
-<p align="center"><img src="assets/figures/overlay_soccer.gif" width="400" alt="Raw vs corrected skeleton overlay, soccer field sprint clip"> <img src="assets/figures/overlay_graffiti.gif" width="400" alt="Raw vs corrected skeleton overlay, city street clip"></p>
+<p align="center"><img src="assets/figures/overlay_track2.gif" width="300" alt="Raw vs corrected skeleton overlay, second runner, same track"> <img src="assets/figures/overlay_field.gif" width="300" alt="Raw vs corrected skeleton overlay, wide field shot"> <img src="assets/figures/overlay_track3.gif" width="300" alt="Raw vs corrected skeleton overlay, knee-level camera angle"></p>
 
 <div align="center">
 
-**[Watch all three clips compiled into one video](assets/action_reel.mp4)** (30s, real footage throughout, no slides)
+**[Watch all four clips compiled into one video](assets/action_reel.mp4)** (real footage throughout, no slides)
 
 </div>
 
