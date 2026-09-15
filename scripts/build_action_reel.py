@@ -2,9 +2,8 @@
 on several different real running clips, and compile the resulting skeleton
 overlays into one video: assets/action_reel.mp4. This is real Strideline
 output on real footage end to end - not a slideshow of the README's static
-figures.
-
-Also (re)generates a compact overlay GIF per extra clip for README embedding.
+figures. A compact GIF of the same compiled footage (assets/figures/overlay_demo.gif)
+is the README's hero image.
 
     python scripts/build_action_reel.py
 """
@@ -23,21 +22,23 @@ ROOT = Path(__file__).resolve().parents[1]
 CLIPS_DIR = ROOT / "assets" / "clips"
 FIG_DIR = ROOT / "assets" / "figures"
 OUT_PATH = ROOT / "assets" / "action_reel.mp4"
+GIF_PATH = FIG_DIR / "overlay_demo.gif"
 
 CANVAS_W, CANVAS_H = 1280, 720
 FPS = 24
 CAPTION_H = 64
 BG = (13, 15, 18)
 INK = (235, 236, 238)
-ACCENT = (79, 155, 209)
 FADE_S = 0.25
 
-# (clip path, on-screen label, also emit a compact README GIF under this name)
+GIF_FPS = 8.0
+GIF_WIDTH = 420
+
 CLIPS = [
-    ("running.mp4", "Outdoor athletics track", None),
-    ("clip_track2.mp4", "Same track, different runner", "overlay_track2.gif"),
-    ("clip_field.mp4", "Athletics field, wide shot", "overlay_field.gif"),
-    ("clip_track3.mp4", "Same track, knee-level angle", "overlay_track3.gif"),
+    ("running.mp4", "Outdoor athletics track"),
+    ("clip_track2.mp4", "Same track, different runner"),
+    ("clip_field.mp4", "Athletics field, wide shot"),
+    ("clip_track3.mp4", "Same track, knee-level angle"),
 ]
 
 
@@ -61,45 +62,6 @@ def _fade(frames, fade_s=FADE_S, fps=FPS):
         j = len(out) - 1 - i
         out[j] = (out[j].astype(np.float32) * alpha).astype(np.uint8)
     return out
-
-
-def _title_card(seconds=3.2):
-    base = Image.new("RGB", (CANVAS_W, CANVAS_H), BG)
-    draw = ImageDraw.Draw(base)
-    title_font = _font(72, bold=True)
-    hook_font = _font(26)
-
-    title = "STRIDELINE IN ACTION"
-    w = draw.textlength(title, font=title_font)
-    draw.text(((CANVAS_W - w) / 2, 280), title, font=title_font, fill=INK)
-
-    hook = "the same pipeline, run end to end on four different real clips"
-    w = draw.textlength(hook, font=hook_font)
-    draw.text(((CANVAS_W - w) / 2, 380), hook, font=hook_font, fill=ACCENT)
-
-    return _fade([np.array(base)] * round(seconds * FPS))
-
-
-def _outro_card(seconds=3.6):
-    base = Image.new("RGB", (CANVAS_W, CANVAS_H), BG)
-    draw = ImageDraw.Draw(base)
-    head_font = _font(42, bold=True)
-    sub_font = _font(20)
-    foot_font = _font(18)
-
-    head = "No retuning between clips"
-    w = draw.textlength(head, font=head_font)
-    draw.text(((CANVAS_W - w) / 2, 280), head, font=head_font, fill=INK)
-
-    sub = "same model, same smoother, same certificate - on four different videos"
-    w = draw.textlength(sub, font=sub_font)
-    draw.text(((CANVAS_W - w) / 2, 340), sub, font=sub_font, fill=ACCENT)
-
-    foot = "github.com/athar-usama/Strideline"
-    fw = draw.textlength(foot, font=foot_font)
-    draw.text(((CANVAS_W - fw) / 2, 640), foot, font=foot_font, fill=(150, 155, 162))
-
-    return _fade([np.array(base)] * round(seconds * FPS))
 
 
 def _process(clip_path):
@@ -132,33 +94,58 @@ def _captioned_clip_frames(clip_path, label, tracks, results):
     return _fade(out)
 
 
+def make_gif_from_video(video_path, out_path, fps_out=GIF_FPS, width=GIF_WIDTH, colors=96):
+    """Build the README hero GIF from the already-rendered action reel MP4,
+    rather than from an in-memory frame list - decouples GIF size/fps tuning
+    from the (slow) pose extraction pass, and lets the GIF be regenerated
+    on its own from the committed MP4.
+    """
+    import cv2
+
+    cap = cv2.VideoCapture(str(video_path))
+    src_fps = cap.get(cv2.CAP_PROP_FPS) or FPS
+    step = max(1, round(src_fps / fps_out))
+    src_w = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or width
+    src_h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or width
+    height = round(src_h * (width / src_w))
+
+    images = []
+    i = 0
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        if i % step == 0:
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(rgb).resize((width, height), Image.LANCZOS)
+            images.append(img.quantize(colors=colors, method=Image.MEDIANCUT))
+        i += 1
+    cap.release()
+
+    duration_ms = round(1000 / fps_out)
+    images[0].save(out_path, save_all=True, append_images=images[1:], duration=duration_ms,
+                   loop=0, optimize=True)
+
+
 def main():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    segments = [_title_card()]
+    all_frames = []
 
-    for filename, label, gif_name in CLIPS:
+    for filename, label in CLIPS:
         clip_path = CLIPS_DIR / filename
         print(f"processing {filename} ...")
         tracks, results = _process(clip_path)
-
-        if gif_name:
-            viz.render_overlay_gif(str(clip_path), tracks, results, FIG_DIR / gif_name)
-            print(f"  wrote {FIG_DIR / gif_name}")
-
-        segments.append(_captioned_clip_frames(clip_path, label, tracks, results))
-
-    segments.append(_outro_card())
+        all_frames.extend(_captioned_clip_frames(clip_path, label, tracks, results))
 
     writer = imageio.get_writer(str(OUT_PATH), fps=FPS, codec="libx264", quality=8,
                                  macro_block_size=None, ffmpeg_params=["-pix_fmt", "yuv420p"])
-    n_frames = 0
-    for seg in segments:
-        for frame in seg:
-            writer.append_data(frame)
-            n_frames += 1
+    for frame in all_frames:
+        writer.append_data(frame)
     writer.close()
+    print(f"wrote {OUT_PATH} ({len(all_frames)} frames, {len(all_frames) / FPS:.1f}s at {FPS}fps)")
 
-    print(f"wrote {OUT_PATH} ({n_frames} frames, {n_frames / FPS:.1f}s at {FPS}fps)")
+    make_gif_from_video(OUT_PATH, GIF_PATH)
+    print(f"wrote {GIF_PATH}")
 
 
 if __name__ == "__main__":

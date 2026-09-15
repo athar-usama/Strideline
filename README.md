@@ -15,37 +15,28 @@ angle by hand. Strideline is the video version: point a phone at a runner from t
 and it turns the raw, jittery output of an off-the-shelf pose model into gait kinematics
 that come with an actual error bound, not just a number.
 
-<p align="center"><img src="assets/figures/overlay_demo.gif" width="640" alt="Raw pose overlay in red, Strideline-corrected skeleton in blue, on the same running clip"></p>
+<p align="center"><img src="assets/figures/overlay_demo.gif" width="640" alt="Raw pose overlay in red, Strideline-corrected skeleton in blue, run end to end on four different real running clips"></p>
 
 <table align="center">
 <tr><td>red skeleton</td><td>raw output of a COCO-17 pose model, frame by frame</td></tr>
 <tr><td>blue skeleton</td><td>Strideline's corrected trajectory: same video, same model, one more layer</td></tr>
 </table>
 
-## The same pipeline, four different clips
-
-No parameters retuned between clips: the same pose model, the same constrained
-smoother, the same certificate, pointed at four different runners and cameras.
-
-<p align="center"><img src="assets/figures/overlay_track2.gif" width="300" alt="Raw vs corrected skeleton overlay, second runner, same track"> <img src="assets/figures/overlay_field.gif" width="300" alt="Raw vs corrected skeleton overlay, wide field shot"> <img src="assets/figures/overlay_track3.gif" width="300" alt="Raw vs corrected skeleton overlay, knee-level camera angle"></p>
+## What Strideline measures
 
 <div align="center">
 
-**[Watch all four clips compiled into one video](assets/action_reel.mp4)** (real footage throughout, no slides)
+| | metric | what it is | why it's here |
+|:---:|---|---|---|
+| 🏃 | cadence | steps per minute, both feet | the number every running watch already gives you |
+| 👣 | ground contact instant | per foot, per stride, with a certified error window | needs no force plate; recovered from ankle kinematics alone |
+| ⚖️ | contact-time asymmetry | left vs. right stride-time gap | a real gait asymmetry signal, not assumed to be zero |
+| 🦵 | knee flexion at contact | mean and spread, in degrees | the post that inspired this project's "average knee shape," made rigorous |
+| 🔁 | stride-time variability | coefficient of variation | a standard fatigue / consistency marker |
+| ↕️ | hip vertical oscillation | peak-to-peak, normalized by leg length | camera-scale-free, so it's comparable across clips |
+| 🎯 | Form Consistency Index | a single 0-100 number, defined below | proposed here, explicitly not a clinical score |
 
 </div>
-
-## What Strideline measures
-
-| metric | what it is | why it's here |
-|---|---|---|
-| cadence | steps per minute, both feet | the number every running watch already gives you |
-| ground contact instant | per foot, per stride, with a certified error window | needs no force plate; recovered from ankle kinematics alone |
-| contact-time asymmetry | left vs. right stride-time gap | a real gait asymmetry signal, not assumed to be zero |
-| knee flexion at contact | mean and spread, in degrees | the post that inspired this project's "average knee shape," made rigorous |
-| stride-time variability | coefficient of variation | a standard fatigue / consistency marker |
-| hip vertical oscillation | peak-to-peak, normalized by leg length | camera-scale-free, so it's comparable across clips |
-| Form Consistency Index | a single 0-100 number, defined below | proposed here, explicitly not a clinical score |
 
 None of this is a diagnostic device. The Form Consistency Index is
 `100 / (1 + stride_CV% + knee_angle_CV%)`, a transparent formula, not a
@@ -272,7 +263,7 @@ the 240 fps stress-test numbers cited above.
 <tr><td><code>scripts/benchmark.py</code></td><td>the synthetic sweep: table, bound-validation plot, correction gallery</td></tr>
 <tr><td><code>scripts/run.py</code></td><td>the real-clip case study: metrics, filmstrip, every per-leg figure</td></tr>
 <tr><td><code>scripts/calibrate.py</code></td><td>reproduces <code>CALIBRATED_SAFETY_FACTOR</code> and the 240 fps stress test</td></tr>
-<tr><td><code>scripts/build_action_reel.py</code></td><td>runs the pipeline on every clip in <code>assets/clips/</code>, compiles <code>assets/action_reel.mp4</code></td></tr>
+<tr><td><code>scripts/build_action_reel.py</code></td><td>runs the pipeline on every clip in <code>assets/clips/</code>, builds <code>assets/action_reel.mp4</code> and the README hero GIF</td></tr>
 <tr><td><code>tests/</code></td><td>18 tests: smoother convergence, certified-bound validation, kinematics, metrics</td></tr>
 </table>
 
